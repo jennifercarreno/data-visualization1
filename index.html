@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <title>Data Visualization 1</title>
+</head>
+<body>
+    <h1 class="text-center mt-3 ">Danceability of Taylor Swift Songs by Album</h1>
+    <div class="btn-group mx-auto my-3 w-100" role="group">
+        <button type="button" class="btn btn-primary mx-1" onclick="handleData(`Taylor Swift`)">Taylor Swift</button>
+        <button type="button" class="btn btn-primary mx-1" onclick="handleData(`Fearless`)">Fearless</button>
+        <button type="button" class="btn btn-primary mx-1" onclick="handleData(`Speak Now`)">Speak Now</button>
+        <button type="button" class="btn btn-primary mx-1" onclick="handleData(`Red`)">Red</button>
+        <button type="button" class="btn btn-primary mx-1" onclick="handleData(`1989`)">1989</button>
+        <button type="button" class="btn btn-primary mx-1" onclick="handleData(`reputation`)">Reputation</button>
+        <button type="button" class="btn btn-primary mx-1" onclick="handleData(`Lover`)">Lover</button>
+        <button type="button" class="btn btn-primary mx-1" onclick="handleData(`folklore`)">Folklore</button>
+        <button type="button" class="btn btn-primary mx-1" onclick="handleData(`evermore`)">Evermore</button>
+        <button type="button" class="btn btn-primary mx-1" onclick="handleData(`Midnights`)">Midnights</button>
+      </div>
+
+
+  <svg id="svg" width="1800" height="700"></svg>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+
+    async function handleData(album) {
+    const data = await d3.csv('taylor_swift_spotify.csv')
+    ///console.log(data)
+    const getAlbumTracks = (data, album) => {
+	return data.filter(d => d.album == album)
+    }
+    console.log(getAlbumTracks(data, "Fearless"))
+
+    const fearless = getAlbumTracks(data, album)
+
+    const margin = { top: 10, right: 10, bottom: 20, left: 40 }
+    const width = 1600 - (margin.left + margin.right)
+    const height = 300 - (margin.top + margin.bottom)
+
+    // x scale 
+    const xscale = d3.scaleBand()
+    .domain(fearless.map(d => d.name))
+    .range([margin.left, width + margin.left])
+    .padding(0.05) // space between bars
+    
+    // y scale 
+    const popExtent = d3.extent(fearless, d => d.danceability)
+    const yscale = d3.scaleLinear()
+    .domain(popExtent)
+    .range([height, margin.top])
+
+    // Select the SVG (root node)
+    const svg = d3.select('#svg')
+    svg.selectAll('.bar').remove();
+    // Clear existing left axis
+    //svg.selectAll('text').remove();
+
+    // Clear existing bottom axis
+    svg.selectAll('g').remove();
+
+    // bars group
+    const barGroup = svg.append('g')
+
+    const bottomAxis = d3.axisBottom(xscale).tickFormat((d) => {
+        // Customize the label formatting here
+        const label = d.toString(); // Assuming the labels are numbers, you can convert them to strings
+
+        // Modify the label as needed to fit within a certain width
+        const maxWidth = 80; // Maximum width in pixels
+        // if (label.length > maxWidth / 8) {
+        //     return label.substring(0, maxWidth / 8) + '...'; // Truncate the label and add ellipsis
+        // }
+
+        return label;
+        });
+    const leftAxis = d3.axisLeft(yscale)
+    svg.append('g')
+        .attr('transform', `translate(${0}, ${height})`)
+        .call(bottomAxis)
+        .selectAll('text')
+        .style('text-anchor', 'end')
+        .attr('dx', '-.8em')
+        .attr('dy', '.15em')
+        .attr('transform', 'rotate(-45)');
+
+    svg
+    .append('g')
+    .attr('transform', `translate(${margin.left}, 0)`)
+    .call(leftAxis)
+
+    // Make the bars
+    barGroup 
+    .selectAll('rect')
+    .data(fearless)
+    .enter()
+    .append('rect')
+    .attr('class', 'bar')
+    .attr('x', (d, i) => xscale(d.name))
+    .attr('y', d => yscale(d.danceability))
+    .attr('width', xscale.bandwidth())
+    .attr('height', d => height - yscale(d.danceability))
+    .attr('fill', `Goldenrod`)
+    }
+    //handleData()
+  </script>
+
+</body>
+</html>
